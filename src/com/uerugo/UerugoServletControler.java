@@ -1,6 +1,9 @@
 package com.uerugo;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -30,28 +33,15 @@ import com.uerugo.model.User;
 public class UerugoServletControler extends HttpServlet {
 	public void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws IOException {
-		
-		resp.setContentType("text/plain");
-		resp.getWriter().println("Hello, world");
-		EntityManager em = EMF.get().createEntityManager();
-		
-		javax.persistence.Query q = em.createQuery("Select p FROM User p where p.userName='test'");
-		
-		User u = null;
-		Iterator it = q.getResultList().iterator();
-		while(it.hasNext()){
-			u = (User) it.next();
+	
+			
+			try {
+				Connection c = EMF.getConnection();
+				Statement stm = c.createStatement();
+				stm.execute("SELECT * from test");
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-		HashSet<Type> types = new HashSet<Type>();
-		List<Dates> dates = new ArrayList<Dates>();
-		dates.add(new Dates(Calendar.getInstance().getTime(),Calendar.getInstance().getTime()));
-		types.add(new Type("test", "dasda"));
-
-//		User u = new User("test","test","test","test");
-		Location l = new Location(0f, 0f);
-//		Event e = new Event(u, l,"testDesc",100f,types,dates);
-//		TransactionOptions.Builder.withXG(true);
-//		em.persist(e);
-//		em.close();
-	}
 }

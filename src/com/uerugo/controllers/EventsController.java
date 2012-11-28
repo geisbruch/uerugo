@@ -112,7 +112,8 @@ public class EventsController extends Controller{
 			List<Event> e = getEventsByLocation(Float.parseFloat(req.getParameter("northeastLongitude")),
 											Float.parseFloat(req.getParameter("northeastLatitude")),
 											Float.parseFloat(req.getParameter("southwestLongitude")),
-											Float.parseFloat(req.getParameter("southwestLatitude")));
+											Float.parseFloat(req.getParameter("southwestLatitude")),
+											req.getParameter("tags"));
 			JSONArray a = new JSONArray();
 			for(Event event : e){
 				try {
@@ -128,9 +129,22 @@ public class EventsController extends Controller{
 	}
 
 	private List<Event> getEventsByLocation(Float northeastLongitude,
-			Float northeastLatitude, Float southwestLongitude, Float southwestLatitude) {
+			Float northeastLatitude, Float southwestLongitude, Float southwestLatitude, String tags) {
 		EntityManager em = EMF.get().createEntityManager();
-		Query q = em.createQuery("SELECT e FROM Event e");
+		StringBuilder qToAdd = new StringBuilder("");
+		boolean thereTags = false;
+		if(tags!=null){
+			String[] ts = tags.split(",");
+			if(ts.length>0)
+				thereTags = true;
+			for(String tag : ts)
+				qToAdd.append("OR e.tags=='"+tags+"'");
+		}
+		String query = "SELECT e FROM Event e";
+		if(thereTags){
+			query+=" WHERE "+qToAdd.toString().substring(2);
+		}
+		Query q = em.createQuery(query);
 		Iterator res = q.getResultList().iterator();
 		List<Event> events = new  ArrayList<Event>();
 		while(res.hasNext()){
