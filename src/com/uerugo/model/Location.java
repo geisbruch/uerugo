@@ -1,46 +1,42 @@
 package com.uerugo.model;
 
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-
-import com.google.appengine.api.datastore.Key;
-
-@Entity
 public class Location {
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	Key key;
-	
-	@Basic
+	Integer id;
 	Float latitude;
-	
-	@Basic
 	Float longitude;
+	String place;
 	
-	public Location(Float latitude, Float longitude) {
+	public Location(Integer id, Float latitude, Float longitude, String name) {
 		super();
+		this.id = id;
 		this.latitude = latitude;
 		this.longitude = longitude;
+		this.place = name;
 	}
-
+	
+	public Integer getId() {
+		return id;
+	}
+	public void setId(Integer id) {
+		this.id = id;
+	}
 	public Float getLatitude() {
 		return latitude;
 	}
-
 	public void setLatitude(Float latitude) {
 		this.latitude = latitude;
 	}
-
 	public Float getLongitude() {
 		return longitude;
 	}
-
 	public void setLongitude(Float longitude) {
 		this.longitude = longitude;
+	}
+	public String getPlace() {
+		return place;
+	}
+	public void setPlace(String name) {
+		this.place = name;
 	}
 	
 	

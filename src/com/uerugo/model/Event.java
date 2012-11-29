@@ -23,37 +23,28 @@ import com.google.appengine.labs.repackaged.org.json.JSONObject;
 @Entity
 public class Event {
 	
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	Key key;
+	Integer id;
 	
-	@Basic 
 	String publisherUserName;
 	
-	@Embedded  
 	Location location;
 	
-	@Basic
 	String name;
 	
-	@Basic
 	String description;
 	
-	@Basic
 	Float price = null;
 	
-	@OneToMany(cascade = CascadeType.ALL) 
-	Set<Type> types;
+	List<Type> types;
 	
-	@OneToMany(cascade = CascadeType.ALL) 
 	List<Dates> dates;
 	
-	public Event(String name, String publisher, Location location, String description,
-			Float price, Set<Type> types, List<Dates> dates) {
+	public Event(String name, String publisher,Location location, String description,
+			Float price, List<Type> types, List<Dates> dates) {
 		super();
 		this.name = name;
-		this.publisherUserName = publisher;
 		this.location = location;
+		this.publisherUserName = publisher;
 		this.description = description;
 		this.price = price;
 		this.types = types;
@@ -89,14 +80,6 @@ public class Event {
 		this.publisherUserName = publisher;
 	}
 
-	public Location getLocation() {
-		return location;
-	}
-
-	public void setLocation(Location location) {
-		this.location = location;
-	}
-
 	public String getDescription() {
 		return description;
 	}
@@ -113,11 +96,11 @@ public class Event {
 		this.price = price;
 	}
 
-	public Set<Type> getTypes() {
+	public List<Type> getTypes() {
 		return types;
 	}
 
-	public void setTypes(Set<Type> types) {
+	public void setTypes(List<Type> types) {
 		this.types = types;
 	}
 
@@ -129,33 +112,67 @@ public class Event {
 		this.dates = dates;
 	}
 
-	public Key getKey() {
-		return key;
+	
+	public Integer getId() {
+		return id;
 	}
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	
 	
 	public JSONObject toJSON() throws Exception{
 		JSONObject o = new JSONObject();
 		try {
+			if(this.id != null)
+				o.put("id", this.id);
 			o.put("description", this.getDescription());
 			o.put("name",this.getName());
 			o.put("publisher",this.getPublisherUserName());
 			if(this.getPrice() != null & this.getPrice()>=0)
 				o.put("price", this.getPrice());
 			JSONObject location = new JSONObject();
-			location.put("latitude", this.getLocation().getLatitude());
-			location.put("longitude",this.getLocation().getLongitude());
+			if(this.location.getId() != null)
+				location.put("id", this.location.getId());
+			if(this.location.getPlace() != null)
+				location.put("place", this.location.getPlace());
+			location.put("latitude", this.location.getLatitude());
+			location.put("longitude",this.location.getLongitude());
 			o.put("location",location);
 			JSONArray dates = new JSONArray();
-			for(Dates date : this.dates){
-				JSONObject dateJSON = new JSONObject();
-				dateJSON.put("from", date.getFrom());
-				dateJSON.put("to", date.getTo());
-				dates.put(dateJSON);
+			if(this.dates != null){
+				for(Dates date : this.dates){
+					JSONObject dateJSON = new JSONObject();
+					dateJSON.put("from", date.getFrom());
+					dateJSON.put("to", date.getTo());
+					dates.put(dateJSON);
+				}
 			}
 			o.put("dates", dates);
 		}catch(Exception ex){
 			throw ex;
 		}
 		return o;
+	}
+	
+	
+	public Location getLocation() {
+		return location;
+	}
+
+
+	public void setLocation(Location location) {
+		this.location = location;
+	}
+
+
+	@Override
+	public String toString() {
+		try {
+			return this.toJSON().toString();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
 	}
 }

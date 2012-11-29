@@ -8,17 +8,12 @@ import javax.persistence.Id;
 
 import com.google.appengine.api.datastore.Key;
 
-@Entity
 public class Type {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	Key key;
+	Integer id;
 	
-	@Basic
 	String hashtag;
 	
-	@Basic
 	String description;
 	
 	public Type(String hashtag, String description) {
@@ -43,8 +38,12 @@ public class Type {
 		this.description = description;
 	}
 
-	public Key getKey() {
-		return key;
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
 	}
 	
 	

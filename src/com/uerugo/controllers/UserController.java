@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.google.appengine.labs.repackaged.org.json.JSONException;
 import com.google.appengine.labs.repackaged.org.json.JSONObject;
 import com.uerugo.EMF;
+import com.uerugo.daos.UserDao;
 import com.uerugo.model.User;
 
 public class UserController extends Controller {
@@ -39,19 +40,11 @@ public class UserController extends Controller {
 			String password = o.getString("password");
 			String lastName = o.getString("lastName");
 			User u = new User(email,userName,password,name,lastName);
-			
-			EntityManager em = EMF.get().createEntityManager();
-			Query q = em.createQuery("Select p FROM User p where p.userName='"+userName+"'");
-			if(q.getResultList().size() > 0){
-				resp.getOutputStream().write("{\"err\":\"User already exists\"}".getBytes());
-				resp.setStatus(400);
-				return;
-			}
-			em.persist(u);
-			em.close();
+			new UserDao().createUser(u);
 			resp.setStatus(201);
 		}catch(Exception e){
-			
+			e.printStackTrace();
+			returnError("Error creating user ["+e.getMessage()+"]", resp);
 		}
 	}
 }

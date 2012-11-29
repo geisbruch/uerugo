@@ -1,28 +1,17 @@
 package com.uerugo;
 
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.servlet.http.*;
-import org.datanucleus.store.types.sco.backed.Set;
 
-import com.google.appengine.api.datastore.DatastoreService;
-import com.google.appengine.api.datastore.DatastoreServiceFactory;
-import com.google.appengine.api.datastore.PreparedQuery;
-import com.google.appengine.api.datastore.Query;
-import com.google.appengine.api.datastore.Query.Filter;
-import com.google.appengine.api.datastore.Query.FilterOperator;
-import com.google.appengine.api.datastore.Query.FilterPredicate;
-import com.google.appengine.api.datastore.TransactionOptions;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.uerugo.daos.EventDao;
+import com.uerugo.daos.UserDao;
 import com.uerugo.model.Dates;
 import com.uerugo.model.Event;
 import com.uerugo.model.Location;
@@ -36,9 +25,15 @@ public class UerugoServletControler extends HttpServlet {
 	
 			
 			try {
-				Connection c = EMF.getConnection();
-				Statement stm = c.createStatement();
-				stm.execute("SELECT * from test");
+				new UserDao().createUser(new User("test","test","test","test","test"));
+				List<Type> types = new ArrayList<Type>();
+				types.add(new Type("test1", "dsa"));
+				types.add(new Type("test2", "dsa"));
+				List<Dates> dates = new ArrayList<Dates>();
+				dates.add(new Dates(Calendar.getInstance().getTime(),Calendar.getInstance().getTime()));
+				Event e = new Event("testEvent","test",new Location(null, 0f, 0f, "ala"),"un evento loco",0f,types,dates);
+				new EventDao().createEvent(e);
+				
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

@@ -1,35 +1,26 @@
 package com.uerugo.controllers;
 
 import java.io.IOException;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.datanucleus.api.jpa.criteria.CriteriaBuilderImpl;
-import org.mortbay.util.ajax.JSONObjectConvertor;
-
 import com.google.appengine.labs.repackaged.org.json.JSONArray;
-import com.google.appengine.labs.repackaged.org.json.JSONException;
 import com.google.appengine.labs.repackaged.org.json.JSONObject;
-import com.google.appengine.labs.repackaged.org.json.JSONStringer;
-import com.uerugo.EMF;
+import com.uerugo.daos.EventDao;
 import com.uerugo.model.Dates;
 import com.uerugo.model.Event;
 import com.uerugo.model.Location;
 import com.uerugo.model.Type;
 
 public class EventsController extends Controller{
-	
+	SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
@@ -65,7 +56,7 @@ public class EventsController extends Controller{
 					returnError("Error date should contan from and to fields",  resp);
 					return;
 				}
-				dates.add(new Dates(new Date(Date.parse(da.getString("from"))),new Date(Date.parse(da.getString("to")))));
+				dates.add(new Dates(sf.parse(da.getString("from")),sf.parse(da.getString("to"))));
 			}
 			
 			if(dates.size()<=0){
@@ -73,14 +64,12 @@ public class EventsController extends Controller{
 				return;
 			}
 			
-			Location location = new Location(Float.parseFloat(loc.get("latitude").toString()), Float.parseFloat(loc.get("longitude").toString()));
-			
 			Float price = 0f;
 			
 			if(o.has("price"))
 				price = Float.parseFloat(o.get("price").toString());
 			
-			Set<Type> types = new HashSet<Type>();
+			List<Type> types = new ArrayList<Type>();
 			if(o.has("types")){
 				JSONArray tArr = o.getJSONArray("types");
 				for(Integer i = 0; i < tArr.length(); i++){
@@ -89,13 +78,22 @@ public class EventsController extends Controller{
 				}
 			}
 			
-			Event e = new Event(name, publisher, location, description, price, types, dates);
+			Integer locId = null;
+			if(loc.has("id"))
+				locId = loc.getInt("id");
+			Location location = new Location(locId,
+					Float.parseFloat(loc.get("latitude").toString()),
+					Float.parseFloat(loc.get("longitude").toString()), null);
 			
-			EntityManager em = EMF.get().createEntityManager();
-			em.persist(e);
-			em.close();
+			Event e = new Event(name, 
+					publisher, 
+					location,
+					description, 
+					price, 
+					types, 
+					dates);
+			new EventDao().createEvent(e);
 			resp.setStatus(201);
-
 		}catch(Exception e){
 			returnError("Error: "+e.getMessage(), resp);
 			e.printStackTrace();
@@ -109,13 +107,21 @@ public class EventsController extends Controller{
 				req.getParameter("northeastLatitude") != null &&
 				req.getParameter("southwestLongitude") != null &&
 				req.getParameter("southwestLatitude") != null){
-			List<Event> e = getEventsByLocation(Float.parseFloat(req.getParameter("northeastLongitude")),
-											Float.parseFloat(req.getParameter("northeastLatitude")),
-											Float.parseFloat(req.getParameter("southwestLongitude")),
-											Float.parseFloat(req.getParameter("southwestLatitude")),
-											req.getParameter("tags"));
+			List<Event> events = null;
+			try {
+				events = new EventDao().getEvents(Float.parseFloat(req.getParameter("northeastLatitude")), 
+						Float.parseFloat(req.getParameter("northeastLongitude")), 
+						Float.parseFloat(req.getParameter("southwestLatitude")), 
+						Float.parseFloat(req.getParameter("southwestLongitude")), 
+						null, null);
+			} catch (Exception e) {
+				e.printStackTrace();
+				returnError("Error getting events ["+e.getMessage()+"]", resp);
+				return;
+			}
+
 			JSONArray a = new JSONArray();
-			for(Event event : e){
+			for(Event event : events){
 				try {
 					a.put(event.toJSON());
 				} catch (Exception e1) {
@@ -128,38 +134,5 @@ public class EventsController extends Controller{
 		}
 	}
 
-	private List<Event> getEventsByLocation(Float northeastLongitude,
-			Float northeastLatitude, Float southwestLongitude, Float southwestLatitude, String tags) {
-		EntityManager em = EMF.get().createEntityManager();
-		StringBuilder qToAdd = new StringBuilder("");
-		boolean thereTags = false;
-		if(tags!=null){
-			String[] ts = tags.split(",");
-			if(ts.length>0)
-				thereTags = true;
-			for(String tag : ts)
-				qToAdd.append("OR e.tags=='"+tags+"'");
-		}
-		String query = "SELECT e FROM Event e";
-		if(thereTags){
-			query+=" WHERE "+qToAdd.toString().substring(2);
-		}
-		Query q = em.createQuery(query);
-		Iterator res = q.getResultList().iterator();
-		List<Event> events = new  ArrayList<Event>();
-		while(res.hasNext()){
-			Event e = (Event)res.next();
-			Location l = e.getLocation();
-			try{
-			if(l.getLatitude() >= southwestLatitude && 
-					l.getLatitude()<=northeastLatitude &&
-					l.getLongitude() <= northeastLongitude &&
-					l.getLongitude() >= southwestLongitude)
-				events.add(e);
-			}catch(NullPointerException ex){
-			
-			}
-		}
-		return events;
-	}
+
 }

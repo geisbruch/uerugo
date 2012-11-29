@@ -60,21 +60,24 @@ public class User {
 		this.email = email;
 	}
 
+	public Integer getId() {
+		return id;
+	}
 	
-	@Basic
+	public void setId(Integer id) {
+		this.id = id;
+	}
+	
+	Integer id;
+	
 	String email;
 	
-	@Id
-	@Basic
 	String userName;
 	
-	@Basic
 	String password;
 	
-	@Basic
 	String name;
 	
-	@Basic
 	String lastName;
 
 }
